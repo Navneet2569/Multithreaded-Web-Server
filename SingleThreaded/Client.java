@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         Socket socket = new Socket("localhost", 8010);
 
         BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -18,15 +18,20 @@ public class Client {
             System.out.print("You: ");
             String userInput = keyboard.nextLine();
 
-            toServer.println(userInput);
+            toServer.println(userInput); // always send first, even "bye"
+
             String reply = fromServer.readLine();
             System.out.println("Server: " + reply);
 
             if (userInput.equalsIgnoreCase("bye")) {
-                break;
+                break; // now break AFTER sending + reading reply
             }
         }
 
+        fromServer.close();
+        toServer.close();
+        keyboard.close();
         socket.close();
+        System.out.println("Connection closed. Goodbye!");
     }
 }
