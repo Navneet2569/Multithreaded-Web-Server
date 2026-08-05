@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,12 +15,11 @@ public class Client {
             Socket socket = null;
             try {
                 socket = new Socket("localhost", port);
-                try (PrintWriter toSocket = new PrintWriter(socket.getOutputStream(), true);
-                        BufferedReader fromSocket = new BufferedReader(
-                                new InputStreamReader(socket.getInputStream()))) {
+                try (BufferedReader fromSocket = new BufferedReader(
+                        new InputStreamReader(socket.getInputStream()))) {
 
-                    toSocket.println("Hello from Client " + socket.getLocalSocketAddress());
                     String line = fromSocket.readLine();
+                    System.out.println("Response from Server: " + line);
                     successCount.incrementAndGet();
                 }
             } catch (IOException ex) {
