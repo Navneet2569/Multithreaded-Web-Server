@@ -39,6 +39,8 @@ public class Server {
             fromClient.close();
             toClient.close();
             clientSocket.close();
+            serverSocket.close();
+            sc.close();
             System.out.println("Client disconnected. Waiting for next client...");
         }
     }
