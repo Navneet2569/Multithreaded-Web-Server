@@ -1,109 +1,428 @@
-## 🚀 Server Implementations
+# Multithreaded Web Server in Java
 
-This project demonstrates the evolution of a Java TCP server through three different concurrency models, highlighting how each approach affects performance, scalability, and resource utilization.
+A Java-based TCP server project demonstrating three different approaches to handling client connections:
 
-### 🔴 Single-Threaded Server
+- Single-Threaded Server
+- Multithreaded Server
+- Thread Pool Server using `ExecutorService`
 
-The initial implementation processes **one client connection at a time**. While simple and easy to understand, it quickly becomes a bottleneck when multiple clients attempt to connect simultaneously.
+The project compares these implementations under the same workload using Apache JMeter to understand the impact of different concurrency models on server performance.
 
-**Key Characteristics**
+---
+
+## Server Implementations
+
+### 1. Single-Threaded Server
+
+The Single-Threaded implementation processes client connections sequentially.
+
+A connection is accepted, processed, and completed before the server accepts the next connection.
+
+```text
+Client 1 ──► Server ──► Process ──► Response
+                                      │
+Client 2 ─────────────────────────────┘
+                                      │
+Client 3 ─────────────────────────────┘
+```
+
+### Characteristics
 
 - Sequential request processing
+- One request handled at a time
 - Simple implementation
-- No concurrency support
-- Suitable for learning socket programming fundamentals
+- Minimal concurrency overhead
+- Useful for understanding TCP socket programming
+- Limited performance under concurrent workloads
 
 ---
 
-### 🟡 Multithreaded Server
+## 2. Multithreaded Server
 
-The second implementation creates **a new thread for every incoming client connection**, allowing multiple requests to be processed concurrently.
+The Multithreaded implementation creates a new Java thread for each incoming client connection.
 
-**Key Characteristics**
+This allows multiple client connections to be processed concurrently.
 
-- One thread per client
+```text
+                         ┌──► Thread 1 ──► Client 1
+                         │
+Server ──► accept() ─────┼──► Thread 2 ──► Client 2
+                         │
+                         └──► Thread 3 ──► Client 3
+```
+
+### Characteristics
+
+- One thread per client connection
 - Concurrent request processing
 - Improved response time
-- Higher throughput
-- Increased thread creation overhead under heavy load
+- Increased throughput
+- Higher thread creation overhead
+- Increased resource consumption as concurrency grows
 
 ---
 
-### 🟢 Thread Pool Server
+## 3. Thread Pool Server
 
-The final implementation uses Java's **ExecutorService** to maintain a reusable pool of worker threads instead of creating a new thread for every request.
+The Thread Pool implementation uses Java's `ExecutorService` to manage a reusable pool of worker threads.
 
-**Key Characteristics**
+Instead of creating a new thread for every incoming connection, client-handling tasks are submitted to the thread pool.
 
-- Thread reuse using ExecutorService
-- Better CPU and memory utilization
-- Improved scalability
-- Lower response time
-- Highest throughput
-- Lowest error percentage
-- Production-oriented concurrency model
+```text
+                         ┌──► Worker 1 ──► Request
+                         │
+Incoming Requests ─────► ExecutorService
+                         │
+                         ├──► Worker 2 ──► Request
+                         │
+                         └──► Worker 3 ──► Request
+```
 
----
+### Characteristics
 
-# 🧪 Performance Testing
-
-All three implementations were benchmarked using **Apache JMeter** under identical testing conditions to compare their performance under concurrent client load.
-
-### Test Configuration
-
-| Parameter | Value |
-|-----------|-------|
-| Testing Tool | Apache JMeter |
-| Total Requests | 600,000 |
-| Protocol | TCP |
-| Environment | Local Machine |
-| JVM | Same JVM |
-| Hardware | Same Machine |
-| Workload | Identical for all implementations |
+- Reusable worker threads
+- Controlled concurrency
+- Reduced thread creation overhead
+- Better thread management
+- Improved throughput
+- Lower average response time in the benchmark
+- Better behavior under high concurrent workloads
 
 ---
 
-# 📊 Performance Comparison
+# Thread Management Comparison
 
-| Metric | 🔴 Single Threaded | 🟡 Multithreaded | 🟢 Thread Pool |
-|--------|-------------------:|----------------:|---------------:|
-| Average Response Time | 218 ms | 45 ms | **34 ms** |
-| Maximum Response Time | 2869 ms | 769 ms | 840 ms |
-| Throughput | 2536 req/sec | 3422 req/sec | **3916 req/sec** |
-| Error Percentage | **42.72%** | 19.25% | **1.76%** |
-| Scalability | Low | Medium | High |
-| Resource Utilization | Poor | Moderate | Excellent |
-| Thread Management | None | One Thread per Request | Reusable Thread Pool |
+| Implementation  | Thread Management              |
+| --------------- | ------------------------------ |
+| Single-Threaded | Single execution path          |
+| Multithreaded   | New thread for each connection |
+| Thread Pool     | Reusable worker threads        |
 
----
+The main difference between the Multithreaded and Thread Pool implementations is how worker threads are managed.
 
-# 📈 Performance Improvements
-
-Compared to the **Single-Threaded Server**, the **Thread Pool Server** achieved:
-
-| Improvement | Result |
-|------------|--------|
-| Response Time Reduction | **84% Faster** |
-| Throughput Increase | **54% Higher** |
-| Error Rate Reduction | **95.9% Lower** |
-| Scalability | Significantly Improved |
-| Thread Management | Efficient Thread Reuse |
+The Multithreaded implementation continuously creates new threads, while the Thread Pool implementation reuses a controlled number of worker threads.
 
 ---
 
-# 🏆 Overall Ranking
+# Client-Server Communication
 
-| Rank | Implementation | Overall Performance |
-|------|----------------|---------------------|
-| 🥇 1 | Thread Pool Server | Best |
-| 🥈 2 | Multithreaded Server | Good |
-| 🥉 3 | Single-Threaded Server | Baseline |
+The project also contains a simple terminal-based client-server communication implementation using Java TCP sockets.
+
+The client and server communicate through the terminal.
+
+```text
+┌──────────────┐                  ┌──────────────┐
+│    Client    │                  │    Server    │
+│              │                  │              │
+│   Terminal   │◄────── TCP ─────►│   Terminal   │
+│              │                  │              │
+└──────────────┘                  └──────────────┘
+```
+
+This implementation demonstrates the fundamentals of:
+
+- TCP communication
+- `Socket`
+- `ServerSocket`
+- Input streams
+- Output streams
+- Client-server architecture
 
 ---
 
-## 🎯 Key Takeaways
+# Performance Testing
 
-- The **Single-Threaded Server** provides a strong foundation for understanding socket programming but struggles under concurrent workloads.
-- The **Multithreaded Server** improves concurrency by allowing multiple client requests to execute simultaneously, though it incurs the overhead of creating a new thread for each request.
-- The **Thread Pool Server** delivers the best overall performance by reusing worker threads, reducing latency, increasing throughput, and minimizing errors.
-- Apache JMeter benchmarking clearly demonstrates how efficient thread management significantly improves server scalability and reliability.
+All three server implementations were tested using **Apache JMeter** under the same general testing conditions.
+
+The objective was to compare:
+
+- Average response time
+- Maximum response time
+- Throughput
+- Error percentage
+
+## Test Configuration
+
+| Parameter     | Value                            |
+| ------------- | -------------------------------- |
+| Testing Tool  | Apache JMeter                    |
+| Total Samples | 600,000                          |
+| Protocol      | TCP                              |
+| Environment   | Local Machine                    |
+| JVM           | Same JVM                         |
+| Hardware      | Same Machine                     |
+| Workload      | Identical across implementations |
+
+> The benchmark results are specific to the local test environment and workload. They are intended to compare the relative behavior of the three implementations rather than represent production capacity.
+
+---
+
+# Performance Results
+
+The following results were obtained after testing each implementation with **600,000 samples**.
+
+| Metric                | Single-Threaded | Multithreaded |       Thread Pool |
+| --------------------- | --------------: | ------------: | ----------------: |
+| Samples               |         600,000 |       600,000 |           600,000 |
+| Average Response Time |          218 ms |         45 ms |         **34 ms** |
+| Maximum Response Time |        2,869 ms |        769 ms |            840 ms |
+| Throughput            |   2,536 req/sec | 3,422 req/sec | **3,916 req/sec** |
+| Error Percentage      |          42.72% |        19.25% |         **1.76%** |
+
+---
+
+# Response Time
+
+```text
+Single-Threaded    218 ms
+Multithreaded       45 ms
+Thread Pool         34 ms
+```
+
+The Thread Pool implementation produced the lowest average response time in the benchmark.
+
+Compared with the Single-Threaded implementation:
+
+**Average response time was reduced by approximately 84.4%.**
+
+---
+
+# Throughput
+
+```text
+Single-Threaded    2,536 req/sec
+Multithreaded      3,422 req/sec
+Thread Pool        3,916 req/sec
+```
+
+The Thread Pool implementation achieved the highest throughput.
+
+Compared with the Single-Threaded implementation:
+
+**Throughput increased by approximately 54.4%.**
+
+---
+
+# Error Percentage
+
+```text
+Single-Threaded    42.72%
+Multithreaded      19.25%
+Thread Pool         1.76%
+```
+
+The Thread Pool implementation produced the lowest observed error percentage.
+
+Compared with the Single-Threaded implementation:
+
+**The observed error rate was reduced by approximately 95.9%.**
+
+---
+
+# Performance Improvement
+
+| Metric                | Single-Threaded |   Thread Pool |      Improvement |
+| --------------------- | --------------: | ------------: | ---------------: |
+| Average Response Time |          218 ms |         34 ms |  **84.4% lower** |
+| Throughput            |   2,536 req/sec | 3,916 req/sec | **54.4% higher** |
+| Error Percentage      |          42.72% |         1.76% |  **95.9% lower** |
+
+---
+
+# Overall Comparison
+
+| Rank | Implementation  | Performance                         |
+| ---- | --------------- | ----------------------------------- |
+| 1    | Thread Pool     | Best overall benchmark performance  |
+| 2    | Multithreaded   | Significant concurrency improvement |
+| 3    | Single-Threaded | Baseline implementation             |
+
+---
+
+# Technical Analysis
+
+## Single-Threaded
+
+The Single-Threaded implementation processes requests sequentially.
+
+```text
+Request 1 ──► Processing
+Request 2 ──► Waiting
+Request 3 ──► Waiting
+Request 4 ──► Waiting
+```
+
+This creates a bottleneck when multiple clients send requests concurrently.
+
+---
+
+## Multithreaded
+
+The Multithreaded implementation allows multiple requests to execute simultaneously.
+
+```text
+Request 1 ──► Thread 1
+Request 2 ──► Thread 2
+Request 3 ──► Thread 3
+Request 4 ──► Thread 4
+```
+
+This removes the single-thread execution bottleneck.
+
+However, creating a new thread for every connection introduces additional overhead related to:
+
+- Thread creation
+- Memory allocation
+- Thread scheduling
+- Context switching
+- Thread lifecycle management
+
+---
+
+## Thread Pool
+
+The Thread Pool implementation uses reusable worker threads.
+
+```text
+Request
+   │
+   ▼
+ExecutorService
+   │
+   ▼
+Available Worker
+   │
+   ▼
+Process Request
+   │
+   ▼
+Worker Reused
+```
+
+This allows the number of concurrently executing tasks to be controlled while avoiding continuous thread creation.
+
+The benchmark showed that this approach produced the best overall performance among the three implementations.
+
+---
+
+# Key Observations
+
+### Single-Threaded Server
+
+Provides the simplest implementation but becomes a bottleneck under concurrent workloads.
+
+### Multithreaded Server
+
+Introduces concurrent processing and significantly improves performance, but creating a new thread for every connection introduces additional overhead.
+
+### Thread Pool Server
+
+Provides controlled concurrency through reusable worker threads and achieved the best results in the benchmark.
+
+---
+
+# Technologies Used
+
+- Java
+- Java Socket API
+- `Socket`
+- `ServerSocket`
+- `Thread`
+- `ExecutorService`
+- Thread Pool
+- TCP
+- Apache JMeter
+
+---
+
+# Project Architecture
+
+```text
+                    TCP Server
+                        │
+          ┌─────────────┼─────────────┐
+          │             │             │
+          ▼             ▼             ▼
+    Single Thread   Multithreaded   Thread Pool
+          │             │             │
+          │             │             │
+          ▼             ▼             ▼
+    Sequential      New Thread     ExecutorService
+    Processing      per Client     Worker Pool
+          │             │             │
+          └─────────────┼─────────────┘
+                        │
+                        ▼
+                 Apache JMeter
+                        │
+                        ▼
+              Performance Analysis
+```
+
+---
+
+# Benchmark Summary
+
+The test was performed using **600,000 samples** for each server implementation.
+
+The Thread Pool implementation achieved:
+
+- **34 ms average response time**
+- **3,916 requests/sec throughput**
+- **1.76% error percentage**
+
+Compared with the Single-Threaded implementation:
+
+- **84.4% lower average response time**
+- **54.4% higher throughput**
+- **95.9% lower observed error rate**
+
+The results demonstrate the impact of moving from sequential processing to concurrent processing and finally to controlled concurrency using a thread pool.
+
+---
+
+# Important Note
+
+These results are benchmark results from a specific local environment.
+
+Actual performance can vary based on:
+
+- CPU
+- Memory
+- JVM configuration
+- Operating system
+- Number of worker threads
+- JMeter configuration
+- Network conditions
+- Request complexity
+- Number of concurrent connections
+
+The primary purpose of this benchmark is to compare the behavior of the three concurrency models under the same workload.
+
+---
+
+# Conclusion
+
+The project demonstrates the progression from:
+
+```text
+Single Thread
+      │
+      ▼
+Multiple Threads
+      │
+      ▼
+Thread Pool
+```
+
+The Single-Threaded implementation establishes the basic server architecture.
+
+The Multithreaded implementation introduces concurrent request processing.
+
+The Thread Pool implementation introduces controlled concurrency and worker-thread reuse through `ExecutorService`.
+
+The **600,000-request JMeter benchmark** showed that the Thread Pool implementation provided the best overall results among the three implementations tested.
+
+```
+
+```
